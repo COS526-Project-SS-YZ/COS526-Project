@@ -6,14 +6,22 @@ torch
 transformers
 diffusers
 rembg
+tqdm
+open3d
 ```
-Install Hunyuan3D-v2 from https://github.com/Tencent/Hunyuan3D-2
+Install Hunyuan3D-v2 following https://github.com/Tencent/Hunyuan3D-2
 
 ## Usage
 
-#### Download data in frames_data_full
+#### Redwood dataset
+Download data in frames_data_full following README.md
 
 #### Prepare data
 ```
 python prepare_data.py
+```
+
+#### Run Zero-shot completion
+```
+python shape_completion_pipeline.py
 ```
