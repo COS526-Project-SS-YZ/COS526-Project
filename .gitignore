@@ -1,4 +1,5 @@
+**/__pycache__/
 frames_data_full/
-!frames_data_full/*/README.md
+!frames_data_full/**/README.md
 redwood_dataset/
 Hunyuan3D-2
