@@ -309,7 +309,66 @@ def find_best_camera_iter(point_cloud, n_cam_hull=100, n_cam_depth_iter=100, rad
     print("[INFO] Best visible count:", best_visible_count)
     
     return best_camera, best_visible_count, best_depth_map, camera_positions_all
+
+def find_best_camera_iter_w_low(point_cloud, n_cam_hull=100, n_cam_depth_iter=100, radius=2.0, width=512, height=512, fov_deg=60, low_res_ratio=1/8):
+    """
+    Given a point cloud and an array of camera positions,
+    determine the camera that sees the maximum number of points.
+    """
+    best_camera = np.zeros(3)
+    best_visible_count = -1
+    
+    camera_positions_hull = generate_camera_positions(n_cam_hull, radius=radius)
+    best_camera, best_visible_count = find_best_camera_hull(point_cloud, camera_positions_hull)
+    
+    print("[INFO] Best camera position:", best_camera)
+    print("[INFO] Best visible count:", best_visible_count)
+    
+    best_camera_prev = best_camera
+    delta_best = 1.0
+    n_iters = 0
+    
+    camera_positions_all = camera_positions_hull
+    
+    while delta_best > 1e-3 or n_iters < 5:
+        r_curr = radius / (2**(0.25*(n_iters+1)))
+        print("[INFO] Current radius:", r_curr)
+        camera_positions_depth = generate_camera_positions_disk(n_cam_depth_iter, 
+                                                                center=best_camera, 
+                                                                radius=r_curr,
+                                                                normal=best_camera / radius)
+        camera_positions_depth = camera_positions_depth / np.linalg.norm(camera_positions_depth, axis=1)[:, None] * radius
+        cam, count, best_depth_map = find_best_camera_depth(point_cloud, 
+                                                            camera_positions_depth,
+                                                            width=width,
+                                                            height=height,
+                                                            fov_deg=fov_deg)
+        if count > best_visible_count:
+            best_visible_count = count
+            best_camera_prev = best_camera
+            best_camera = cam
+            print("[INFO] Best camera position:", best_camera)
+            print("[INFO] Best visible count:", best_visible_count)
+            delta_best = np.linalg.norm(best_camera_prev - best_camera)
+        else:
+            delta_best = 0.0
+            
+        n_iters += 1
+        print("Iteration:", n_iters, "Best visible count:", best_visible_count)
         
+        camera_positions_all = np.vstack((camera_positions_all, camera_positions_depth))
+        
+    print("[INFO] Best camera position:", best_camera)
+    print("[INFO] Best visible count:", best_visible_count)
+    
+    visible_count, best_depth_map_low = camera_depth_visibility(point_cloud, 
+                                                                cam, 
+                                                                np.array([0,0,0]), np.array([0,1,0]), 
+                                                                int(width*low_res_ratio), int(height*low_res_ratio), 
+                                                                fov_deg)
+    
+    return best_camera, best_visible_count, best_depth_map, best_depth_map_low, camera_positions_all        
+
     # # create a set of camera positions around the best camera as a disk
     # camera_positions_depth = generate_camera_positions(n_cam_depth_iter, center=best_camera, radius=radius / 2)
     # camera_positions_depth = camera_positions_depth / np.linalg.norm(camera_positions_depth, axis=1)[:, None] * radius

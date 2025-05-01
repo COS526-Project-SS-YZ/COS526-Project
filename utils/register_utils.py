@@ -44,6 +44,9 @@ def multiscale_registration(pcd_source, pcd_target, scales=np.arange(0.8,1.25,0.
     
     best_transformation = None
     best_cd = float('inf')
+    # construct a 3D mesh grid of the scales
+    # scales = np.meshgrid(scales, scales, scales)
+    
     for scale in scales:
         # Downsample the point clouds
         pcd_source_copy = copy.deepcopy(pcd_source)
@@ -51,7 +54,9 @@ def multiscale_registration(pcd_source, pcd_target, scales=np.arange(0.8,1.25,0.
         pcd_target_copy = copy.deepcopy(pcd_target)
         pcd_target_copy = pcd_target_copy.voxel_down_sample(voxel_size=voxel_size)
         
-        pcd_source_copy = pcd_source_copy.scale(scale, center=pcd_source_copy.get_center())
+        pcd_source_npy = np.asarray(pcd_source_copy.points) * scale
+        pcd_source_copy.points = o3d.utility.Vector3dVector(pcd_source_npy)
+        # pcd_source_copy = pcd_source_copy.scale(scale, center=pcd_source_copy.get_center())
         transformation = register_point_cloud(pcd_source_copy, pcd_target_copy)
         pcd_source_copy = pcd_source_copy.transform(transformation)
         # Compute the point cloud distance
