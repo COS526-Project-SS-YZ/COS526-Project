@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     radius = np.max(np.linalg.norm(np.asarray(complete_pcd.points) - center, axis=1))
 
-    if radius == 0:                          # all points identical → convex hull fails
+    if radius == 0:                          # all points identical so convex hull fails
         print(f"[{args.token}] skipped – GT radius is zero")
         sys.exit(0)
     scale = 1.0 / radius
