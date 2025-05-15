@@ -38,7 +38,8 @@ Download data in frames_data_full following README.md
 python prepare_data.py
 ```
 
-#### Run Zero-shot completion
-```
-python shape_completion_pipeline.py
-```
+#### Run Zero-shot completion on Redwood
+See [shape_completion_pipeline_demo_final.ipynb](shape_completion_pipeline_demo_final.ipynb)
+
+#### Run Zero-shot completion on ShapeNet
+See [shape_completion_pipeline_demo_shapenet.ipynb](shape_completion_pipeline_demo_shapenet.ipynb)
