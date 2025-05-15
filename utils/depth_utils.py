@@ -1,5 +1,6 @@
 import numpy as np
 import open3d as o3d
+from scipy.spatial import ConvexHull as SciConvexHull
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -310,7 +311,11 @@ def find_best_camera_iter(point_cloud, n_cam_hull=100, n_cam_depth_iter=100, rad
     
     return best_camera, best_visible_count, best_depth_map, camera_positions_all
 
-def find_best_camera_iter_w_low(point_cloud, n_cam_hull=100, n_cam_depth_iter=100, radius=2.0, width=512, height=512, fov_deg=60, low_res_ratio=1/8):
+def find_best_camera_iter_w_low(point_cloud, n_cam_hull=100, n_cam_depth_iter=100, 
+                                fps_hull=8192,
+                                radius=2.0, width=512, height=512, fov_deg=60, low_res_ratio=1/8, 
+                                depth_look_at=np.array([0,0,0]),
+                                depth_up=np.array([0,1,0])):
     """
     Given a point cloud and an array of camera positions,
     determine the camera that sees the maximum number of points.
@@ -319,7 +324,12 @@ def find_best_camera_iter_w_low(point_cloud, n_cam_hull=100, n_cam_depth_iter=10
     best_visible_count = -1
     
     camera_positions_hull = generate_camera_positions(n_cam_hull, radius=radius)
-    best_camera, best_visible_count = find_best_camera_hull(point_cloud, camera_positions_hull)
+    # best_camera, best_visible_count = find_best_camera_hull(point_cloud, camera_positions_hull)
+    point_cloud_down = o3d.geometry.PointCloud()
+    point_cloud_down.points = o3d.utility.Vector3dVector(point_cloud)
+    point_cloud_down = point_cloud_down.farthest_point_down_sample(fps_hull)
+    point_cloud_down = np.asarray(point_cloud_down.points)
+    best_camera, best_visible_count = find_best_camera_hull(point_cloud_down, camera_positions_hull)
     
     print("[INFO] Best camera position:", best_camera)
     print("[INFO] Best visible count:", best_visible_count)
@@ -342,7 +352,9 @@ def find_best_camera_iter_w_low(point_cloud, n_cam_hull=100, n_cam_depth_iter=10
                                                             camera_positions_depth,
                                                             width=width,
                                                             height=height,
-                                                            fov_deg=fov_deg)
+                                                            fov_deg=fov_deg,
+                                                            look_at=depth_look_at,
+                                                            up=depth_up)
         if count > best_visible_count:
             best_visible_count = count
             best_camera_prev = best_camera
@@ -363,9 +375,11 @@ def find_best_camera_iter_w_low(point_cloud, n_cam_hull=100, n_cam_depth_iter=10
     
     visible_count, best_depth_map_low = camera_depth_visibility(point_cloud, 
                                                                 cam, 
-                                                                np.array([0,0,0]), np.array([0,1,0]), 
-                                                                int(width*low_res_ratio), int(height*low_res_ratio), 
-                                                                fov_deg)
+                                                                look_at=depth_look_at,
+                                                                up=depth_up,
+                                                                width=int(width*low_res_ratio),
+                                                                height=int(height*low_res_ratio),
+                                                                fov_deg=fov_deg)
     
     return best_camera, best_visible_count, best_depth_map, best_depth_map_low, camera_positions_all        
 

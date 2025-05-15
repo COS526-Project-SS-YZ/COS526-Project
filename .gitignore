@@ -5,3 +5,7 @@ frames_data_full/**/**.zip
 redwood_dataset/
 Hunyuan3D-2
 output*
+shape_completion_pipeline_demo.py
+shape_completion_pipeline_demo.ipynb
+shape_completion_pipeline.ipynb
+shape_completion_pipeline.py
